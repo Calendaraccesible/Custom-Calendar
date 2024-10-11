@@ -3,85 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Upload Events for Calendar</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .upload-section {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        input[type="file"] {
-            margin-right: 10px;
-        }
-    </style>
+    <title>Admin Page - Upload Excel</title>
 </head>
 <body>
-
-    <h1>Admin - Upload Events for Calendar</h1>
-
-    <!-- Section for Admin to Upload the Excel File -->
-    <div class="upload-section">
-        <input type="file" id="fileUpload" accept=".xlsx, .xls" />
-        <button onclick="uploadEvents()">Upload Events</button>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <h1>Upload Excel File</h1>
+    <input type="file" id="fileInput" accept=".xlsx, .xls">
+    <button id="uploadBtn">Upload</button>
+    
     <script>
-        function uploadEvents() {
-            const fileInput = document.getElementById('fileUpload');
+        document.getElementById('uploadBtn').addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
 
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-
-                    // Process the workbook to extract events
-                    processWorkbook(workbook);
-
-                    // Redirect to the calendar page after processing
-                    window.location.href = 'index.html'; // Redirect to your calendar page
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
-                alert("Please select a file to upload.");
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
             }
-        }
 
-        function processWorkbook(workbook) {
-            const events = {}; // Object to store events by date
-            const sheetNames = workbook.SheetNames;
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const events = {};
 
-            // Assuming the first sheet contains the events data
-            const sheet = workbook.Sheets[sheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(sheet);
+                // Assuming your Excel has a sheet named 'Events'
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-            // Process jsonData to extract events (modify according to your Excel structure)
-            jsonData.forEach(row => {
-                const date = row.Date; // Change to your actual date column name
-                const eventName = row.EventName; // Change to your actual event name column
-                const timeIn = row.TimeIn; // Change to your actual start time column
-                const timeOut = row.TimeOut; // Change to your actual end time column
+                jsonData.forEach(row => {
+                    const date = row.Date; // Ensure your Excel has this column
+                    const eventName = row.Event; // Ensure your Excel has this column
+                    const timeIn = row.TimeIn; // Ensure your Excel has this column
+                    const timeOut = row.TimeOut; // Ensure your Excel has this column
 
-                // Save events in an array for the specific date
-                if (!events[date]) {
-                    events[date] = [];
-                }
-                events[date].push({ name: eventName, TimeIn: timeIn, TimeOut: timeOut });
-            });
+                    if (!events[date]) {
+                        events[date] = [];
+                    }
 
-            // Store events in localStorage
-            localStorage.setItem('calendarEvents', JSON.stringify(events));
-            alert("Events uploaded successfully!");
-        }
+                    events[date].push({
+                        name: eventName,
+                        TimeIn: timeIn,
+                        TimeOut: timeOut
+                    });
+                });
+
+                // Store events in localStorage
+                localStorage.setItem('calendarEvents', JSON.stringify(events));
+
+                // Redirect to the calendar page
+                window.location.href = 'index.html'; // Ensure this points to your calendar page
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
     </script>
+    
+    <!-- Include the XLSX library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
 </body>
 </html>
