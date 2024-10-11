@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title aria-hidden="true">Accessible Calendar with Event Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .banner {
+            width: 100%;
+            max-width: 800px;
+            height: 150px; /* Fixed height for the banner */
+            text-align: center;
+            border: 1px solid #ddd; /* Add borders matching the calendar's borders */
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+        }
+
+        .banner img {
+            width: 100%;      /* Full width relative to the container (800px max width) */
+            height: 100%;     /* Ensures the height matches the 150px */
+            object-fit: cover; /* Ensures the image scales properly to fill 800x150 */
+        }
+        .banner h3 {
+            position: absolute;
+            bottom: 10px; /* 10px from the bottom */
+            left: 10px;   /* 10px from the left */
+            margin: 0;    /* Remove any default margin */
+            padding: 5px;
+            background-color: transparent; /* Semi-transparent black background */
+            color: white;
+            font-size: 1.5vw;
+            border-radius: 3px; /* Rounded corners for the background */
+
+        }
+        .calendar {
+            width: 90%;
+            max-width: 800px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .calendar h3 {
+            margin: 0;
+            padding: 10px 0;
+        }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background-color: #f4f4f4;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .days div {
+            font-weight: bold;
+            text-align: center;
+        }
+        .dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .dates div {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-end;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            /* /*background-color: #fff; */
+            
+        }
+        .dates div .event-info {
+            background:white;
+            color: black;
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+            overflow: hidden;
+            white-space: normal;
+            text-overflow: ellipsis;
+            display: block;
+            margin-top: 5px;
+            text-decoration: none; /* Remove underline for <a> */
+        }
+        .today {
+            background-color:whitesmoke;
+            color: black;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        .today .event-info {
+            background-color: rgba(0, 0, 0, 0.7); /* Darker background for event info */
+            color: white; /*Ensure text is visible */
+        }
+        .event {
+            /* background-color: white; */
+            color: black;
+            font-weight: bold;
+            position: relative;
+        }
+        /* .selected {
+            background-color: #FFC107;
+            color: black;
+        } */
+        .navigation {
+            display: flex;
+            align-items: center; /* Vertically centers the content */
+           justify-content: space-between; /*Spreads the buttons and the heading across the width */
+            width: 100%; /* Ensures the navigation takes up the full width */
+            margin: 5px 0;
+            text-align: center;
+        }
+
+        .Headings {
+         display: flex;
+         flex-direction: column; /* Stack h1, h4, and h2 vertically */
+         text-align: center; /* Center align the text */
+        }
+        .navigation h1 {
+            margin-top: 45px; /* More space between banner and h1 */
+            margin-bottom: 5px; /* Less space between h1 and h4 */
+            text-align: center;
+            flex-grow: 1; /* Allows the heading to expand between the buttons */
+            color: #560059;
+        }
+        .navigation h2 {
+            color: #3498db;
+            margin-top: 15px;
+        }
+
+        .navigation h4 {
+            color: #560059;
+            margin-top: 15px;
+        }
+        a.event-info {
+            color: black;
+            text-decoration: none;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #ffeb3b;
+        }
+        a.event-info:focus {
+            outline: 2px solid #0056b3;
+        }
+        button {
+            font-size: 16px;
+            padding: 16px;
+            border: none;
+            background-color: #560059;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 0px;
+        }
+        button:focus {
+            outline: 2px solid #0056b3;
+        }
+
+        @media (max-width: 768px) {
+    .calendar {
+        width: 100%;
+    }
+
+    .days {
+        display: none; /* Hide the days' header on mobile */
+    }
+
+    .dates {
+        display: block; /* List view on mobile */
+    }
+
+    .dates div {
+        display: none;   /* changed from block to none*/
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        border-radius: 0;
+        margin: 0;
+    }
+  
+    .dates div.event {
+                display: block; /* Show only event days */
+            }
+
+    .event-info {
+        font-size: 14px; /* Larger text for mobile */
+        margin-top: 10px;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+   
+
+    <div class="calendar" role="grid" aria-labelledby="calendarTitle">
+        <div class="banner">
+            <img src="f1.png" alt="Banner" />
+          
+        </div>
+        <div class="navigation">
+            <button id="prevMonth" aria-label="Previous Month">Previous</button>
+            <div class="Headings">
+            <h1 >Ridge Recreation Center</h1>
+            <h4>All Hours Are Subject To Change</h4>
+            <h2 id="monthYear" aria-live="assertive"></h2>
+            </div>
+            <button id="nextMonth" aria-label="Next Month">Next</button>
+        </div>
+        <div class="days" aria-hidden="false">
+            <div>Sunday</div>
+            <div>Monday</div>
+            <div>Tuesday</div>
+            <div>Wednesday</div>
+            <div>Thursday</div>
+            <div>Friday</div>
+            <div>Saturday</div>
+        </div>
+        <div class="dates" id="dates" role="grid">
+        </div>
+    </div>
+   
+    <script>
+        function isMobileDevice() 
+        {
+            return window.innerWidth <= 768; // Mobile device if width is <= 768px
+        }
+
+    function adjustLayoutForMobile() 
+    {
+        if (isMobileDevice()) {
+            document.querySelector('.days').style.display = 'none'; // Hide the weekday headers
+            document.querySelector('.dates').style.display = 'block'; // Show dates as a block list
+        } else {
+            document.querySelector('.days').style.display = 'grid'; // Show the weekday headers
+            document.querySelector('.dates').style.display = 'grid'; // Show dates in grid format
+        }
+    }
+
+    // Call this on page load and on window resize
+    window.onload = adjustLayoutForMobile;
+    window.onresize = adjustLayoutForMobile;
+
+    let selectedDate = new Date();
+    let currentMonth = selectedDate.getMonth();
+    let currentYear = selectedDate.getFullYear();
+
+        // Sample events with names and descriptions
+         // Retrieve events from localStorage
+    const events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
+
+    console.log(events);
+    function drawCalendar(month, year) {
+    const monthYearEl = document.getElementById('monthYear');
+    const datesEl = document.getElementById('dates');
+
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    monthYearEl.innerHTML = `${months[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    datesEl.innerHTML = '';
+
+    // Fill in the empty days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+        datesEl.innerHTML += `<div aria-hidden="true"></div>`; // Hide empty days from the screen reader
+    }
+
+    // Fill in the days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateDiv = document.createElement('div');
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        dateDiv.innerText = day;
+        dateDiv.dataset.date = dateStr;
+        dateDiv.setAttribute('aria-label', `Date: ${day} ${months[month]} ${year}`);
+
+        // Highlight today's date
+        if (month === selectedDate.getMonth() && day === selectedDate.getDate() && year === selectedDate.getFullYear()) {
+            dateDiv.classList.add('today');
+        }
+
+        if (events[dateStr]) {
+            const eventMap = {};
+            events[dateStr].forEach(event => {
+                if (!eventMap[event.name]) {
+                    eventMap[event.name] = [];
+                }
+                eventMap[event.name].push(`${event.TimeIn} - ${event.TimeOut}`);
+            });
+
+            for (const [eventName, eventTimes] of Object.entries(eventMap)) {
+                dateDiv.classList.add('event');
+                const eventText = document.createElement('span'); //'p'
+                eventText.classList.add('event-info');
+                eventText.innerHTML = `<strong>${eventName}</strong><br>${eventTimes.join('<br>')}`;
+               //eventText.setAttribute('aria-label', `Event: ${eventName} on ${day} ${months[month]} with timings: ${timings}`);
+                eventText.setAttribute('tabindex', '0'); // Make it focusable
+                const timings = eventTimes.join(', ');
+                const eventDate = `${day} ${months[month]} ${year}`; 
+                eventText.setAttribute('aria-label', `Event: ${eventName} on ${day} ${months[month]} with timings: ${timings} on ${eventDate}`);
+                
+                dateDiv.appendChild(eventText);
+            }
+            datesEl.appendChild(dateDiv);
+        } else {
+            // Hide non-event days from screen readers
+            dateDiv.setAttribute('aria-hidden', 'true');
+            datesEl.appendChild(dateDiv);
+        }
+    }
+
+    scrollToToday();
+}
+     
+
+/*function scrollToToday() {
+    const todayElement = document.querySelector('.today');
+    if (todayElement) {
+        todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}*/
+
+function scrollToToday() {
+    let todayElement = document.querySelector('.today');
+
+    // If todayElement is present (today has events)
+    if (todayElement && todayElement.classList.contains('event')) {
+        todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Get all event days in the calendar
+    const eventDays = Array.from(document.querySelectorAll('.event'));
+    const currentDate = new Date();
+    let nextEvent = null;
+    let previousEvent = null;
+
+    // Loop through eventDays to find the next and previous events relative to today's date
+    eventDays.forEach((eventDay) => {
+        const eventDate = new Date(eventDay.dataset.date);
+
+        if (eventDate > currentDate) {
+            // If it's after today's date and we haven't found the next event, set it
+            if (!nextEvent) {
+                nextEvent = eventDay;
+            }
+        } else if (eventDate < currentDate) {
+            // If it's before today's date, keep track of the last previous event
+            previousEvent = eventDay;
+        }
+    });
+
+    // Scroll to the next event if found
+    if (nextEvent) {
+        nextEvent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // If no next event, scroll to the last previous event
+    else if (previousEvent) {
+        previousEvent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // Fallback: If no events at all, scroll to the first day of the month
+    else {
+        const firstDay = document.querySelector('.dates div[aria-label]');
+        if (firstDay) {
+            firstDay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+}
+
+window.addEventListener('resize', function() {
+    scrollToToday();
+});
+
+        function showPreviousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            drawCalendar(currentMonth, currentYear);
+        }
+
+        function showNextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            drawCalendar(currentMonth, currentYear);
+        }
+    
+      
+       // Event listeners for buttons
+        document.getElementById('prevMonth').addEventListener('click', showPreviousMonth);
+        document.getElementById('nextMonth').addEventListener('click', showNextMonth);
+
+    // Initial calendar draw
+    drawCalendar(currentMonth, currentYear);
+       
+    </script>
+
+</body>
+</html>
